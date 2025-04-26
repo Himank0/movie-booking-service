@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  mongo:
+    image: mongo:latest
+    container_name: moviebooking-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - moviebooking-net
+
+  movie-booking-backend:
+    build: .
+    container_name: moviebooking-app
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mongo
+    networks:
+      - moviebooking-net
+
+volumes:
+  mongo-data:
+
+networks:
+  moviebooking-net:

@@ -1,0 +1,39 @@
+package com.moviebooking.movie_booking_service.controller;
+
+import com.moviebooking.movie_booking_service.dto.MovieResponse;
+import com.moviebooking.movie_booking_service.entities.Movie;
+import com.moviebooking.movie_booking_service.response.MovieApiResponse;
+import com.moviebooking.movie_booking_service.service.MovieService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/v1.0/moviebooking")
+public class MovieController {
+
+    @Autowired
+    private MovieService movieService;
+
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllMovies() {
+        List<MovieResponse> movies = movieService.getAllMovies();
+        if (movies.isEmpty()) {
+            return ResponseEntity.ok(new MovieApiResponse("No movies available for booking.", movies));
+        }
+        return ResponseEntity.ok(new MovieApiResponse("Movies fetched successfully", movies));
+    }
+
+    @GetMapping("/movies/search/{moviename}")
+    public ResponseEntity<?> searchMovies(@PathVariable("moviename") String name) {
+        List<MovieResponse> movies = movieService.searchMoviesByName(name);
+        if (movies.isEmpty()) {
+            return ResponseEntity.ok(new MovieApiResponse("No matching movie found.", movies));
+        }
+        return ResponseEntity.ok(new MovieApiResponse("Movie search successful", movies));
+    }
+
+}
