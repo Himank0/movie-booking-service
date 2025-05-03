@@ -1,27 +1,46 @@
-version: '3.8'
+version: '3'
 services:
-  mongo:
-    image: mongo:latest
-    container_name: moviebooking-mongo
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
     ports:
-      - "27017:27017"
-    volumes:
-      - mongo-data:/data/db
-    networks:
-      - moviebooking-net
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
 
-  movie-booking-backend:
-    build: .
-    container_name: moviebooking-app
+  kafka:
+    image: confluentinc/cp-kafka:7.3.0
     ports:
-      - "8081:8081"
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
     depends_on:
-      - mongo
-    networks:
-      - moviebooking-net
-
-volumes:
-  mongo-data:
-
-networks:
-  moviebooking-net:
+      - zookeeper
+#version: '3.8'
+#services:
+#  mongo:
+#    image: mongo:latest
+#    container_name: moviebooking-mongo
+#    ports:
+#      - "27017:27017"
+#    volumes:
+#      - mongo-data:/data/db
+#    networks:
+#      - moviebooking-net
+#
+#  movie-booking-backend:
+#    build: .
+#    container_name: moviebooking-app
+#    ports:
+#      - "8081:8081"
+#    depends_on:
+#      - mongo
+#    networks:
+#      - moviebooking-net
+#
+#volumes:
+#  mongo-data:
+#
+#networks:
+#  moviebooking-net:

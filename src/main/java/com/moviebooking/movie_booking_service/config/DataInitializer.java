@@ -1,7 +1,12 @@
 package com.moviebooking.movie_booking_service.config;
 
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.springframework.kafka.support.serializer.JsonDeserializer;
+import org.springframework.kafka.support.serializer.JsonSerializer;
 import com.moviebooking.movie_booking_service.entities.Movie;
 import com.moviebooking.movie_booking_service.entities.User;
+import com.moviebooking.movie_booking_service.events.TicketBookedEvent;
 import com.moviebooking.movie_booking_service.repository.MovieRepository;
 import com.moviebooking.movie_booking_service.repository.TicketRepository;
 import com.moviebooking.movie_booking_service.repository.UserRepository;
