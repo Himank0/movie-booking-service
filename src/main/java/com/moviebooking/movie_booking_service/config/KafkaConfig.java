@@ -1,13 +1,16 @@
 package com.moviebooking.movie_booking_service.config;
 
 import com.moviebooking.movie_booking_service.events.TicketBookedEvent;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.config.TopicConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.*;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
@@ -18,16 +21,25 @@ import java.util.Map;
 @Configuration
 public class KafkaConfig {
 
+    @Bean
+    public NewTopic logTopic() {
+        return TopicBuilder.name("application-logs")
+                .partitions(3)
+                .replicas(1)
+                .config(TopicConfig.RETENTION_MS_CONFIG, "604800000") // 7 days
+                .build();
+    }
+
     // Producer Configuration
     @Bean
     public ProducerFactory<String, TicketBookedEvent> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
-        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "172.17.16.173:9092");
-        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");   //where to find kafka server
+        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);   // how to convert msg key to string
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         configProps.put(JsonSerializer.TYPE_MAPPINGS,
-                "ticketBookedEvent:com.moviebooking.movie_booking_service.events.TicketBookedEvent");
-        configProps.put(JsonSerializer.ADD_TYPE_INFO_HEADERS, false);
+                "ticketBookedEvent:com.moviebooking.movie_booking_service.events.TicketBookedEvent"); // how to convert TicketBookedEvent to json
+        configProps.put(JsonSerializer.ADD_TYPE_INFO_HEADERS, false);   // for json formatting
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
@@ -35,7 +47,7 @@ public class KafkaConfig {
     @Bean
     public ConsumerFactory<String, TicketBookedEvent> consumerFactory() {
         Map<String, Object> props = new HashMap<>();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "172.17.16.173:9092");
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "movie-service-group");
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);

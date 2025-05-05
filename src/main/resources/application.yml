@@ -11,24 +11,24 @@ server:
     web:
       resources:
         add-mappings: false
-  kafka:
-    bootstrap-servers: 172.17.16.173:9092
-    consumer:
-      group-id: movie-service-group
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: "com.moviebooking.movie_booking_service.events"
-        spring.json.type.mapping: ticketBookedEvent:com.moviebooking.movie_booking_service.events.TicketBookedEvent
-        spring.json.value.default.type: com.moviebooking.movie_booking_service.events.TicketBookedEvent
-        spring.json.use.type.headers: false
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      properties:
-        spring.json.type.mapping: ticketBookedEvent:com.moviebooking.movie_booking_service.events.TicketBookedEvent
-        spring.json.add.type.headers: false
+#  kafka:
+#    bootstrap-servers: localhost:9092
+#    consumer:
+#      group-id: movie-service-group
+#      auto-offset-reset: earliest
+#      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+#      properties:
+#        spring.json.trusted.packages: "com.moviebooking.movie_booking_service.events"
+#        spring.json.type.mapping: ticketBookedEvent:com.moviebooking.movie_booking_service.events.TicketBookedEvent
+#        spring.json.value.default.type: com.moviebooking.movie_booking_service.events.TicketBookedEvent
+#        spring.json.use.type.headers: false
+#    producer:
+#      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+#      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+#      properties:
+#        spring.json.type.mapping: ticketBookedEvent:com.moviebooking.movie_booking_service.events.TicketBookedEvent
+#        spring.json.add.type.headers: false
 
   data:
     mongodb:
