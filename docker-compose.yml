@@ -15,7 +15,7 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     networks:
-      - kafka-network
+      - shared-network
 
   elasticsearch:
     image: elasticsearch:7.17.13
@@ -30,50 +30,8 @@ services:
     ports:
       - "9201:9200"
     networks:
-      - elk-network
-#  elasticsearch:
-#    image: elasticsearch:8.17.1
-#    container_name: elasticsearch
-#    restart: always
-#    volumes:
-#      - elastic_data:/usr/share/elasticsearch/data/
-#    environment:
-#      - xpack.security.enabled=false  # Disable security for local development
-#      - ES_JAVA_OPTS=-Xmx256m -Xms256m
-#      - discovery.type=single-node
-#    ports:
-#      - '9200:9200'
-#    networks:
-#      - elk-network
+      - shared-network
 
-#  logstash:
-#    image: logstash:8.17.1
-#    container_name: logstash
-#    restart: always
-#    volumes:
-#      - ./logstash/:/logstash_dir
-#    command: logstash -f /logstash_dir/pipeline/logstash.conf
-#    depends_on:
-#      - elasticsearch
-#    ports:
-#      - '5000:5000'
-#    environment:
-#      - LS_JAVA_OPTS=-Xmx256m -Xms256m
-#    networks:
-#      - elk-network
-#
-#  kibana:
-#    image: kibana:8.17.1
-#    container_name: kibana
-#    restart: always
-#    ports:
-#      - '5601:5601'
-#    environment:
-#      - ELASTICSEARCH_URL=http://elasticsearch:9200
-#    depends_on:
-#      - elasticsearch
-#    networks:
-#      - elk-network
   logstash:
     image: logstash:7.17.13
     container_name: logstash
@@ -84,11 +42,11 @@ services:
     depends_on:
       - elasticsearch
     ports:
-      - '127.0.0.1:5000:5000'
+      - '5000:5000'
     environment:
       - LS_JAVA_OPTS=-Xmx256m -Xms256m
     networks:
-      - elk-network
+      - shared-network
 
   kibana:
     image: kibana:7.17.13
@@ -101,7 +59,7 @@ services:
     depends_on:
       - elasticsearch
     networks:
-      - elk-network
+      - shared-network
 
 
 
@@ -109,7 +67,5 @@ volumes:
   elastic_data: { }
 
 networks:
-  kafka-network:
-    driver: bridge
-  elk-network:
+  shared-network:
     driver: bridge
