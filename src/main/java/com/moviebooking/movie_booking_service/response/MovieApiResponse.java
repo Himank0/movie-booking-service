@@ -10,14 +10,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Transactional
-public class MovieApiResponse {
+public class MovieApiResponse<T> {
 
     @JsonProperty("message")
     private String message;
     @JsonProperty("data")
-    private Object data;
+    private T data;
 
-    public MovieApiResponse(String message, Object data) {
+    public MovieApiResponse(String message, T data) {
         this.message = message;
         this.data = data;
     }

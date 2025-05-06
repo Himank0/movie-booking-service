@@ -13,6 +13,7 @@ import com.moviebooking.movie_booking_service.repository.MovieRepository;
 import com.moviebooking.movie_booking_service.repository.TicketRepository;
 import com.moviebooking.movie_booking_service.response.MovieApiResponse;
 import com.moviebooking.movie_booking_service.response.TicketApiResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -22,6 +23,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class TicketService {
 
     @Autowired
@@ -34,40 +36,42 @@ public class TicketService {
     private KafkaTemplate<String, TicketBookedEvent> kafkaTemplate;
 
     public TicketApiResponse bookTicket(String movieName, TicketBookingRequest request) {
-//        Optional<Movie> movieOpt = movieRepository
-//                .findByMovieNameIgnoreCaseAndTheatreNameIgnoreCase(movieName,
-//                        request.getTheatreName());
-//
-//        if (movieOpt.isEmpty()) {
-//            throw new BookingException("Movie or Theatre not found.");
-//        }
 
-//        Movie movie = movieOpt.get();
+        try {
+            // Create and save ticket
+            Ticket ticket = new Ticket();
+            ticket.setMovieName(movieName);
+            ticket.setTheatreName(request.getTheatreName());
+            ticket.setNumberOfTickets(request.getNumberOfTickets());
+            ticket.setSeatNumbers(request.getSeatNumbers());
+            ticket.setUserId(request.getUserId());
+            ticketRepository.save(ticket);
+            log.debug("Ticket saved with ID: {}", ticket.getId());
 
-//        List<Ticket> tickets = ticketRepository.findByMovieNameIgnoreCaseAndTheatreNameIgnoreCase(movieName, request.getTheatreName());
-//
-//        int totalBooked = tickets.stream().mapToInt(Ticket::getNumberOfTickets).sum();
-//        int available = movie.getTotalTicketsAllotted() - totalBooked;
-//
-//        // Fix availability check
-//        if (movie.getStatus().equalsIgnoreCase("SOLD_OUT") || request.getNumberOfTickets() > available) {
-//            throw new BookingException("Not enough tickets available.");
-//        }
+            // Send event to Kafka
+            TicketBookedEvent event = new TicketBookedEvent(movieName, request.getTheatreName(), request.getNumberOfTickets());
+            kafkaTemplate.send("ticket-booked-events", event)
+                    .whenComplete((result, ex) -> {
+                        if (ex == null) {
+                            log.debug("Event sent. Movie: {}, Tickets: {}, Metadata: {}",
+                                    event.getMovieName(),
+                                    event.getNumberOfTickets(),
+                                    result.getRecordMetadata());
+                        } else {
+                            log.error("Kafka send failed. Movie: {}. Error: {}",
+                                    event.getMovieName(),
+                                    ex.getMessage());
+                            // Consider adding to a retry queue here
+                        }
+                    });
+            log.info("Successfully booked {} tickets for {} at {}",
+                    request.getNumberOfTickets(), movieName, request.getTheatreName());
+            return new TicketApiResponse("Ticket booked successfully", ticket);
 
-        // Create and save ticket
-        Ticket ticket = new Ticket();
-        ticket.setMovieName(movieName);
-        ticket.setTheatreName(request.getTheatreName());
-        ticket.setNumberOfTickets(request.getNumberOfTickets());
-        ticket.setSeatNumbers(request.getSeatNumbers());
-        ticket.setUserId(request.getUserId());
-        ticketRepository.save(ticket);
-
-        // Send event to Kafka
-        TicketBookedEvent event = new TicketBookedEvent(movieName, request.getTheatreName(), request.getNumberOfTickets());
-        kafkaTemplate.send("ticket-booked-events", event);
-
-        return new TicketApiResponse("Ticket booked successfully", ticket);
+        } catch (Exception e) {
+            log.error("Ticket booking failed for {}: {}", request, e.getMessage(), e);
+            throw new BookingException("Ticket booking failed");
+        }
     }
 
 
@@ -105,11 +109,33 @@ public class TicketService {
 
     // TicketService.java
     public List<String> getBookedSeats(String movieName, String theatreName) {
-        List<Ticket> tickets = ticketRepository
-                .findByMovieNameIgnoreCaseAndTheatreNameIgnoreCase(movieName, theatreName);
+        log.debug("Fetching booked seats for movie: {} at theatre: {}", movieName, theatreName);
 
-        return tickets.stream()
-                .flatMap(ticket -> ticket.getSeatNumbers().stream())
-                .collect(Collectors.toList());
+        try {
+            long startTime = System.currentTimeMillis();
+
+            List<Ticket> tickets = ticketRepository
+                    .findByMovieNameIgnoreCaseAndTheatreNameIgnoreCase(movieName, theatreName);
+
+            log.trace("Found {} tickets for movie: {} at theatre: {}",
+                    tickets.size(), movieName, theatreName);
+
+            List<String> bookedSeats = tickets.stream()
+                    .peek(ticket -> log.trace("Processing ticket ID: {} with {} seats",
+                            ticket.getId(), ticket.getSeatNumbers().size()))
+                    .flatMap(ticket -> ticket.getSeatNumbers().stream())
+                    .collect(Collectors.toList());
+
+            long duration = System.currentTimeMillis() - startTime;
+            log.info("Successfully retrieved {} booked seats for {} at {} in {} ms",
+                    bookedSeats.size(), movieName, theatreName, duration);
+
+            return bookedSeats;
+
+        } catch (Exception e) {
+            log.error("Error fetching booked seats for {} at {}: {}",
+                    movieName, theatreName, e.getMessage(), e);
+            throw new ResourceNotFoundException("Failed to retrieve booked seats");
+        }
     }
 }

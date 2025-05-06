@@ -6,11 +6,14 @@ import com.moviebooking.movie_booking_service.entities.Movie;
 import com.moviebooking.movie_booking_service.entities.Ticket;
 import com.moviebooking.movie_booking_service.repository.MovieRepository;
 import com.moviebooking.movie_booking_service.repository.TicketRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class MovieService {
 
@@ -23,16 +26,50 @@ public class MovieService {
     }
 
     public List<MovieResponse> getAllMovies() {
-        return movieRepository.findAll().stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
+        log.info("Fetching all movies from database");
+        try {
+            long startTime = System.currentTimeMillis();
+
+            List<MovieResponse> movies = movieRepository.findAll().stream()
+                    .peek(movie -> log.trace("Mapping movie: {}", movie.getMovieName()))
+                    .map(this::mapToDTO)
+                    .collect(Collectors.toList());
+
+            log.info("Successfully retrieved {} movies in {} ms",
+                    movies.size(), System.currentTimeMillis() - startTime);
+            return movies;
+
+        } catch (Exception e) {
+            log.error("Failed to retrieve movies: {}", e.getMessage(), e);
+            throw new ResourceNotFoundException("Movie retrieval failed");
+        }
     }
 
+
     public List<MovieResponse> searchMoviesByName(String movieName) {
-        return movieRepository.findByMovieNameContainingIgnoreCase(movieName)
-                .stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
+        log.debug("Searching movies containing: {}", movieName);
+
+        try {
+            if (movieName == null || movieName.trim().isEmpty()) {
+                log.warn("Empty search term provided");
+                return Collections.emptyList();
+            }
+
+            long startTime = System.currentTimeMillis();
+            List<MovieResponse> results = movieRepository
+                    .findByMovieNameContainingIgnoreCase(movieName)
+                    .stream()
+                    .map(this::mapToDTO)
+                    .collect(Collectors.toList());
+
+            log.debug("Found {} movies matching '{}' in {} ms",
+                    results.size(), movieName, System.currentTimeMillis() - startTime);
+            return results;
+
+        } catch (Exception e) {
+            log.error("Search failed for term '{}': {}", movieName, e.getMessage(), e);
+            throw new ResourceNotFoundException("Movie search failed");
+        }
     }
 
     public void deleteMovie(String movieName, String theatreName, String movieId) {
