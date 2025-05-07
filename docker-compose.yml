@@ -24,11 +24,12 @@ services:
     volumes:
       - elastic_data:/usr/share/elasticsearch/data
     environment:
+      - xpack.security.enabled=false
       - discovery.type=single-node
-      - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+#      - bootstrap.memory_lock=true
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
     ports:
-      - "9201:9200"
+      - "9200:9200"
     networks:
       - shared-network
 
@@ -38,13 +39,15 @@ services:
     restart: always
     volumes:
       - ./logstash/:/logstash_dir
+
     command: logstash -f /logstash_dir/pipeline/logstash.conf
     depends_on:
       - elasticsearch
     ports:
-      - '5000:5000'
+      - '5044:5044'
     environment:
       - LS_JAVA_OPTS=-Xmx256m -Xms256m
+
     networks:
       - shared-network
 
