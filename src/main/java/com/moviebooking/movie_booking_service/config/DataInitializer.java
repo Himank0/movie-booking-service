@@ -1,5 +1,6 @@
 package com.moviebooking.movie_booking_service.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
@@ -16,6 +17,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Configuration
+@Slf4j
 public class DataInitializer {
 
     @Bean
@@ -50,7 +52,7 @@ public class DataInitializer {
             movieRepository.save(m3);
             movieRepository.save(m4);
 
-            System.out.println("Sample movies initialized in MongoDB.");
+            log.info("Sample movies initialized in MongoDB.");
         };
     }
 }

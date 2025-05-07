@@ -15,60 +15,60 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     networks:
-      - shared-network
+      - kafka-net
 
   elasticsearch:
-    image: elasticsearch:7.17.13
+    image: elasticsearch:8.17.1
     container_name: elasticsearch
     restart: always
     volumes:
-      - elastic_data:/usr/share/elasticsearch/data
+      - elastic_data:/usr/share/elasticsearch/data/
     environment:
-      - xpack.security.enabled=false
+      - xpack.security.enabled=false  # Disable security for local development
+      - ES_JAVA_OPTS=-Xmx256m -Xms256m
       - discovery.type=single-node
-#      - bootstrap.memory_lock=true
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
     ports:
-      - "9200:9200"
+      - '9200:9200'
     networks:
-      - shared-network
+      - elk-network
 
   logstash:
-    image: logstash:7.17.13
+    image: logstash:8.17.1
     container_name: logstash
     restart: always
     volumes:
-      - ./logstash/:/logstash_dir
-
-    command: logstash -f /logstash_dir/pipeline/logstash.conf
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
     depends_on:
       - elasticsearch
     ports:
       - '5044:5044'
     environment:
+      - ELASTIC_USERNAME=elastic
+      - ELASTIC_PASSWORD=elastic123
       - LS_JAVA_OPTS=-Xmx256m -Xms256m
-
     networks:
-      - shared-network
+      - elk-network
 
   kibana:
-    image: kibana:7.17.13
+    image: kibana:8.17.1
     container_name: kibana
     restart: always
     ports:
       - '5601:5601'
     environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      #      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - ELASTICSEARCH_URL=http://172.19.4.5:9200
     depends_on:
       - elasticsearch
     networks:
-      - shared-network
-
+      - elk-network
 
 
 volumes:
   elastic_data: { }
 
 networks:
-  shared-network:
+  kafka-net:
+    driver: bridge
+  elk-network:
     driver: bridge
