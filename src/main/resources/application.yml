@@ -12,7 +12,8 @@ server:
       resources:
         add-mappings: false
   kafka:
-    bootstrap-servers: localhost:9092
+#    bootstrap-servers: localhost:9092
+    bootstrap-servers: 172.28.160.1:9092
 #    consumer:
 #      group-id: movie-service-group
 #      auto-offset-reset: earliest
