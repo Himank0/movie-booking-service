@@ -1,0 +1,35 @@
+# use this to run - docker-compose -f docker/mongo-compose.yml up -d
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: moviebooking-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: moviebooking_db
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - moviebooking-network
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: moviebooking-mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_BASICAUTH: "false"
+    depends_on:
+      - mongodb
+    networks:
+      - moviebooking-network
+
+volumes:
+  mongo_data:
+
+networks:
+  moviebooking-network:
