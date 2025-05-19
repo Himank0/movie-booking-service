@@ -6,7 +6,9 @@ import com.moviebooking.movie_booking_service.entities.User;
 import com.moviebooking.movie_booking_service.repository.MovieRepository;
 import com.moviebooking.movie_booking_service.repository.TicketRepository;
 import com.moviebooking.movie_booking_service.repository.UserRepository;
+import com.moviebooking.movie_booking_service.service.LoggingService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +17,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @Slf4j
 @Configuration
 public class DataInitializer {
+
+    @Autowired
+    LoggingService loggingService;
 
     @Bean
     CommandLineRunner initMovies(MovieRepository movieRepository, TicketRepository ticketRepository, UserRepository userRepository) {
@@ -48,7 +53,8 @@ public class DataInitializer {
             movieRepository.save(m3);
             movieRepository.save(m4);
 
-            log.info("Sample movies initialized in MongoDB.");
+            loggingService.logInfo("Sample movies initialized in MongoDB.");
+//            log.info("Sample movies initialized in MongoDB.");
         };
     }
 }

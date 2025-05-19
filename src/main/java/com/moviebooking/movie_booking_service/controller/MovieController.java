@@ -3,6 +3,7 @@ package com.moviebooking.movie_booking_service.controller;
 import com.moviebooking.movie_booking_service.dto.MovieResponse;
 import com.moviebooking.movie_booking_service.entities.Movie;
 import com.moviebooking.movie_booking_service.response.MovieApiResponse;
+import com.moviebooking.movie_booking_service.service.LoggingService;
 import com.moviebooking.movie_booking_service.service.MovieService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,10 @@ public class MovieController {
     @Autowired
     private MovieService movieService;
 
+    @Autowired
+    private LoggingService loggingService;
+
+
     @GetMapping("/all")
     public ResponseEntity<?> getAllMovies() {
         long startTime = System.currentTimeMillis();
@@ -27,7 +32,7 @@ public class MovieController {
         if (movies.isEmpty()) {
             return ResponseEntity.ok(new MovieApiResponse("No movies available for booking.", movies));
         }
-        log.info("Returning {} movies (took {}ms)", movies.size(), System.currentTimeMillis() - startTime);
+        loggingService.logInfo("Returning " + movies.size() + " movies (took " + (System.currentTimeMillis() - startTime) + "ms)");
         return ResponseEntity.ok(new MovieApiResponse("Movies fetched successfully", movies));
     }
 

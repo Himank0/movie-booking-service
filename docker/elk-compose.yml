@@ -25,6 +25,10 @@ services:
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
       - xpack.security.enabled=false
+      - xpack.encryptedSavedObjects.encryptionKey=abc123abc123abc123abc123abc123ab
+      - xpack.reporting.encryptionKey=def456def456def456def456def456de
+      - xpack.security.encryptionKey=ghi789ghi789ghi789ghi789ghi789gh
+      - SERVER_PUBLICBASEURL=http://localhost:5601
 
     depends_on:
       - elasticsearch
